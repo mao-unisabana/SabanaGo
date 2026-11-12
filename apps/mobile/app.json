@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "Parqueo",
-    "slug": "parqueo",
-    "scheme": "parqueo",
+    "name": "SabanaGO",
+    "slug": "sabanago",
+    "scheme": "sabanago",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.parqueo.app"
+      "bundleIdentifier": "com.sabanago.app"
     },
     "android": {
-      "package": "com.parqueo.app"
+      "package": "com.sabanago.app"
     },
     "web": {},
     "plugins": [
