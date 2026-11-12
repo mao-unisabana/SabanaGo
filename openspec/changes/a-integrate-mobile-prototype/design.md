@@ -8,7 +8,6 @@ Problemas encontrados al revisarlo (11 nov):
 - Estados `free` / `busy`, sin `no_data`.
 - Colores de la identidad anterior (#2F9E6F, #D7483F) y emoji (🚗, ＋, ✓).
 - `maplibre-gl@5` sin versión exacta, cargado desde unpkg.
-- `querySourceFeatures('protomaps', …)` apunta a una fuente que el estilo de CARTO no tiene, así que el ajuste a calles nunca funciona.
 - `attributionControl: false` oculta la atribución que exige OpenStreetMap.
 - Nombre del paquete `parqueo`.
 
@@ -28,7 +27,7 @@ Problemas encontrados al revisarlo (11 nov):
 1. **Se conserva MapLibre en WebView.** Desviación respecto al `context.md`, que menciona `react-native-svg`. Las herramientas de dibujo ya funcionan sobre coordenadas reales y rehacerlas en SVG no cabe antes del 14 nov. Alternativa descartada: plano SVG proyectado, que sí correría en web pero obliga a reescribir el dibujo.
 2. **Rayado de `no_data` con `fill-pattern`.** Se registra una imagen de rayas con `map.addImage` al cargar el estilo y la capa usa `fill-pattern` para `no_data`. La ✕ de ocupado es una capa `symbol` con `text-field: '✕'` sobre el centroide del puesto; usa las glifos del estilo de CARTO.
 3. **Estado como propiedad `status`.** `SpotFeature.properties.state` pasa a `status: 'free' | 'occupied' | 'no_data'`, alineado con el enum `space_status`. Los datos viejos en AsyncStorage con `busy` se migran a `occupied` al leerlos.
-4. **Carriles sin dependencia de una fuente inexistente.** Se elimina la consulta a `protomaps` y el ajuste a calles queda deshabilitado. El trazado manual de carriles (P06) sigue funcionando.
+4. **Ajuste a calles con la fuente `protomaps` de CARTO.** El estilo Voyager de CARTO sí tiene una fuente llamada `protomaps` (es la única), así que se conserva la consulta `querySourceFeatures('protomaps', {sourceLayer:'roads'})` y el ajuste a calles se mantiene. Se valida en Expo Go; el trazado manual de carriles (P06) sigue funcionando.
 5. **Modo por interruptor local.** Un `useState<'driver' | 'admin'>` con un botón en la barra superior. La protección real del modo admin llega con roles en el cambio E y RF-09; aquí solo se separa la interfaz.
 6. **Versión fija de MapLibre.** `maplibre-gl@5.x.y` exacta, la última 5.x disponible al implementar, en el `<script>` y el `<link>` del HTML.
 
