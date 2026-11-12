@@ -4,8 +4,8 @@ Hitos de Obsidian: 09, 10, 11 (ejecución) y 12 (pasos 3 y 4). Fecha objetivo: j
 
 ## 1. Proyecto Supabase
 
-- [ ] 1.1 Crear `feature/b-setup-supabase-schema` desde `develop`, correr `supabase init` y confirmar que `supabase start` levanta en local; verificación: `supabase status` muestra API URL y llaves
-- [ ] 1.2 Actualizar `.env.example` con `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` y un comentario de quién usa cada una; verificación: ninguna llave real en el diff
+- [x] 1.1 Crear `feature/b-setup-supabase-schema` desde `develop`, correr `supabase init` y confirmar que `supabase start` levanta en local; verificación: `supabase status` muestra API URL y llaves
+- [x] 1.2 Actualizar `.env.example` con `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` y un comentario de quién usa cada una; verificación: ninguna llave real en el diff
 
 ## 2. Esquema
 
