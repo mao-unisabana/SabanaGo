@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "SabanaGO",
+    "slug": "sabanago",
+    "scheme": "sabanago",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sabanago.app"
+    },
+    "android": {
+      "package": "com.sabanago.app"
+    },
+    "web": {},
+    "plugins": [
+      "expo-status-bar",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Usamos tu ubicación para centrar el mapa donde estás."
+        }
+      ]
+    ]
+  }
+}

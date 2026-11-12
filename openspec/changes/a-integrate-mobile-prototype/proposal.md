@@ -9,7 +9,7 @@ El prototipo móvil de Juan vive en el PR #1 (`feature/mobile-mapa-prototipo`) y
 - Revisar el PR #1 y corregir lo mínimo para que entre a `develop`: nombre SabanaGO, paleta v1.1, íconos vectoriales en lugar de emoji y dependencias con versión fija.
 - Agregar el tercer estado de puesto, `no_data`, con su forma visual (gris con rayado) y la ✕ en ocupado, para que libre, ocupado y sin datos se distingan sin depender del color.
 - Unificar los nombres de estado con el DER (`free`, `occupied`, `no_data`; hoy el prototipo usa `busy`).
-- Arreglar la detección de carriles, que consulta una fuente `protomaps` que no existe en el estilo de CARTO, y volver a mostrar la atribución del mapa base.
+- Volver a mostrar la atribución del mapa base y validar el ajuste a calles.
 - Separar el modo administrador (herramientas de dibujo P02–P06) del modo conductor (vista P07 y contador) detrás de un interruptor simple, sin autenticación todavía.
 - Mergear el PR #1 a `develop` con estas correcciones.
 
