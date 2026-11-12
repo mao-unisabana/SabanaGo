@@ -37,7 +37,7 @@ select is((select count(*)::int from public.space where zone_id = 9001), 1,
 select is((select status::text from public.space_state where space_id = 9001), 'free',
   'visitante lee estados');
 select is((select free from public.get_occupancy(9001)), 1, 'visitante usa get_occupancy');
-select is((select count(*)::int from public.camera_status), 1, 'visitante lee camera_status');
+select is((select count(*)::int from public.camera_status where id = 9001), 1, 'visitante lee camera_status');
 select throws_ok($$ select * from public.favorite $$, '42501', null,
   'visitante no lee favoritos');
 select throws_ok($$ select * from public.camera $$, '42501', null,
@@ -84,7 +84,7 @@ select throws_ok($$ select * from public.get_occupancy_history(9001, now(), now(
 -- ===== Administrador =====
 set local request.jwt.claims =
   '{"sub":"00000000-0000-0000-0000-0000000000ad","role":"authenticated"}';
-select is((select count(*)::int from public.camera), 1, 'admin lee camera');
+select is((select count(*)::int from public.camera where id = 9001), 1, 'admin lee camera');
 select is((select count(*)::int from public.profile
             where email in ('a@test.dev', 'b@test.dev', 'admin@test.dev')), 3,
   'admin lee todos los perfiles');

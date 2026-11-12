@@ -21,11 +21,11 @@ Hitos de Obsidian: 09, 10, 11 (ejecución) y 12 (pasos 3 y 4). Fecha objetivo: j
 ## 4. RPC y tiempo real
 
 - [x] 4.1 Escribir `…_004_rpc_realtime.sql` con las 6 RPC, `mark_stale_cameras`, la tarea de `pg_cron` y la publicación Realtime; verificación: pruebas pgTAP de `get_occupancy` (5/6/1/12), umbral 0,6 → `no_data`, puesto de otra cámara ignorado y 403 de las RPC admin para rol `user`
-- [ ] 4.2 Probar a mano en local que un puesto queda en `no_data` a los 10 s de dejar de llamar a la ingesta (con `curl` a `rpc/ingest_space_states` usando la llave de servicio); verificación: consulta a `space_state` antes y después
+- [x] 4.2 Probar a mano en local que un puesto queda en `no_data` a los 10 s de dejar de llamar a la ingesta (con `curl` a `rpc/ingest_space_states` usando la llave de servicio); verificación: consulta a `space_state` antes y después
 
 ## 5. Seed y nube
 
-- [ ] 5.1 Escribir `supabase/seed.sql` con Alejandría (zona A, 12 puestos), la Maqueta demo (1 cámara `webcam:0`, 6 puestos) y un admin de prueba solo local; verificación: `get_occupancy` del lote Alejandría devuelve total 12
+- [x] 5.1 Escribir `supabase/seed.sql` con Alejandría (zona A, 12 puestos), la Maqueta demo (1 cámara `webcam:0`, 6 puestos) y un admin de prueba solo local; verificación: `get_occupancy` del lote Alejandría devuelve total 12
 - [ ] 5.2 Crear el proyecto de demo en Supabase, `supabase link` y `supabase db push`; confirmar la versión de pg_cron y que el cifrado en reposo está activo; verificación: la tarea `mark-stale-cameras` aparece en `cron.job`
 - [ ] 5.3 Revisar con `code-review-graph`, abrir PR a `develop` y compartir las llaves de la demo por canal privado (nunca en el PR); verificación: PR abierto con `supabase test db` en verde
 
