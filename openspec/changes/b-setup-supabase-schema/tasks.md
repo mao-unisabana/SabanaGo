@@ -14,13 +14,13 @@ Hitos de Obsidian: 09, 10, 11 (ejecución) y 12 (pasos 3 y 4). Fecha objetivo: j
 
 ## 3. Seguridad
 
-- [ ] 3.1 Escribir `…_003_rls.sql` con `is_admin()`, RLS en todas las tablas y los `GRANT`/`REVOKE` de la matriz; verificación: `select relname from pg_class where relrowsecurity = false and relnamespace = 'public'::regnamespace and relkind = 'r'` no devuelve tablas
-- [ ] 3.2 Agregar `supabase/tests/rls.test.sql` con los casos de la nota 11 (visitante, usuario A contra B, cambio de rol, escritura en `space_state`, `source_url` oculta); verificación: `supabase test db` pasa
+- [x] 3.1 Escribir `…_003_rls.sql` con `is_admin()`, RLS en todas las tablas y los `GRANT`/`REVOKE` de la matriz; verificación: `select relname from pg_class where relrowsecurity = false and relnamespace = 'public'::regnamespace and relkind = 'r'` no devuelve tablas
+- [x] 3.2 Agregar `supabase/tests/rls.test.sql` con los casos de la nota 11 (visitante, usuario A contra B, cambio de rol, escritura en `space_state`, `source_url` oculta); verificación: `supabase test db` pasa
 - [ ] 3.3 Revisar 003 con `security-reviewer` y corregir lo que encuentre; verificación: hallazgos resueltos o justificados en el PR
 
 ## 4. RPC y tiempo real
 
-- [ ] 4.1 Escribir `…_004_rpc_realtime.sql` con las 6 RPC, `mark_stale_cameras`, la tarea de `pg_cron` y la publicación Realtime; verificación: pruebas pgTAP de `get_occupancy` (5/6/1/12), umbral 0,6 → `no_data`, puesto de otra cámara ignorado y 403 de las RPC admin para rol `user`
+- [x] 4.1 Escribir `…_004_rpc_realtime.sql` con las 6 RPC, `mark_stale_cameras`, la tarea de `pg_cron` y la publicación Realtime; verificación: pruebas pgTAP de `get_occupancy` (5/6/1/12), umbral 0,6 → `no_data`, puesto de otra cámara ignorado y 403 de las RPC admin para rol `user`
 - [ ] 4.2 Probar a mano en local que un puesto queda en `no_data` a los 10 s de dejar de llamar a la ingesta (con `curl` a `rpc/ingest_space_states` usando la llave de servicio); verificación: consulta a `space_state` antes y después
 
 ## 5. Seed y nube
