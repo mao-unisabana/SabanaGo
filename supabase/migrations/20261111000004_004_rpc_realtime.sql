@@ -41,6 +41,11 @@ begin
     raise exception 'invalid bucket: %', bucket using errcode = '22023';
   end if;
 
+  if to_ts <= from_ts or to_ts - from_ts > interval '93 days' then
+    raise exception 'invalid range: to_ts must be after from_ts and span at most 93 days'
+      using errcode = '22023';
+  end if;
+
   select p.timezone into tz from public.parking_lot p where p.id = lot_id;
   tz := coalesce(tz, 'America/Bogota');
 

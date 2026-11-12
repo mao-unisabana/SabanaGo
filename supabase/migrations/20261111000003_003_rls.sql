@@ -61,11 +61,24 @@ create policy camera_admin_update on public.camera
 -- Privilegios: se parte de cero para anon/authenticated (Supabase les da todo
 -- por defecto) y se concede solo lo de la matriz.
 revoke all on all tables in schema public from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
 
 grant select on public.parking_lot, public.zone, public.space,
                 public.space_state, public.camera_status to anon, authenticated;
 
 grant select on public.profile to authenticated;
 grant update (full_name) on public.profile to authenticated;
-grant select, update on public.camera to authenticated;
+-- camera: solo name y source_url son editables; parking_lot_id, is_online y
+-- last_seen_at los escribe la detección (service_role).
+grant select on public.camera to authenticated;
+grant update (name, source_url) on public.camera to authenticated;
 grant select, insert, update, delete on public.favorite, public.push_token to authenticated;
+
+-- Objetos futuros creados por postgres en public no heredan privilegios de
+-- anon/authenticated: todo GRANT debe ser explícito.
+alter default privileges for role postgres in schema public
+  revoke all on tables from anon, authenticated;
+alter default privileges for role postgres in schema public
+  revoke all on sequences from anon, authenticated;
+alter default privileges for role postgres in schema public
+  revoke execute on functions from public, anon, authenticated;

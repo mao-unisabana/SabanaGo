@@ -1,6 +1,6 @@
 -- Pruebas de RLS y permisos (tarea 3.2), casos de la nota 11.
 begin;
-select plan(33);
+select plan(41);
 
 -- Datos de prueba (corre como postgres, que salta RLS).
 insert into auth.users (id, email) values
@@ -72,6 +72,14 @@ select throws_ok($$ update public.profile set role = 'admin'
 select lives_ok($$ update public.profile set full_name = 'Ana'
                     where id = '00000000-0000-0000-0000-00000000000a' $$,
   'A edita su full_name');
+select lives_ok($$ update public.camera set name = 'hack' where id = 9001 $$,
+  'A: UPDATE de camera no falla pero RLS lo deja en 0 filas');
+select throws_ok($$ update public.favorite set user_id = '00000000-0000-0000-0000-00000000000b'
+                     where id = 9001 $$, '42501', null,
+  'A no reasigna el user_id de su favorito');
+select throws_ok($$ update public.push_token set user_id = '00000000-0000-0000-0000-00000000000b'
+                     where expo_push_token = 'tok-a' $$, '42501', null,
+  'A no reasigna el user_id de su push_token');
 select throws_ok($$ update public.space_state set status = 'occupied' $$, '42501', null,
   'A no escribe en space_state');
 select throws_ok($$ select public.ingest_space_states(9001, '[]') $$, '42501', null,
@@ -85,6 +93,8 @@ select throws_ok($$ select * from public.get_occupancy_history(9001, now(), now(
 set local request.jwt.claims =
   '{"sub":"00000000-0000-0000-0000-0000000000ad","role":"authenticated"}';
 select is((select count(*)::int from public.camera where id = 9001), 1, 'admin lee camera');
+select throws_ok($$ update public.camera set parking_lot_id = 9001 where id = 9001 $$,
+  '42501', null, 'admin no puede cambiar camera.parking_lot_id (permiso por columna)');
 select is((select count(*)::int from public.profile
             where email in ('a@test.dev', 'b@test.dev', 'admin@test.dev')), 3,
   'admin lee todos los perfiles');
@@ -101,6 +111,22 @@ select is((select is_active from public.zone where id = 9001), true,
   'zona sin cambios tras el intento de A');
 select is((select status::text from public.space_state where space_id = 9001), 'free',
   'estado sin cambios tras el intento de A');
+
+select is((select name from public.camera where id = 9001), 'cam',
+  'el nombre de la cámara no cambió tras el intento de A');
+select is((select count(*)::int
+             from pg_default_acl d
+             join pg_roles r on r.oid = d.defaclrole
+             cross join lateral aclexplode(d.defaclacl) a
+            where r.rolname = 'postgres' and d.defaclnamespace = 'public'::regnamespace
+              and (a.grantee = 0
+                   or a.grantee in (select oid from pg_roles
+                                     where rolname in ('anon', 'authenticated')))),
+  0, 'default privileges de postgres en public sin anon/authenticated/PUBLIC');
+select is(has_sequence_privilege('anon', 'public.favorite_id_seq', 'usage'), false,
+  'anon sin USAGE en secuencias');
+select is(has_sequence_privilege('authenticated', 'public.favorite_id_seq', 'usage'), false,
+  'authenticated sin USAGE en secuencias');
 
 -- Privilegios de ejecución de la ingesta
 select is(has_function_privilege('anon', 'public.ingest_space_states(bigint,jsonb)', 'execute'),

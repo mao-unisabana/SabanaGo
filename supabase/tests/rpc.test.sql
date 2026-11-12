@@ -1,6 +1,6 @@
 -- Pruebas de RPC, ingesta y tiempo real (tarea 4.1).
 begin;
-select plan(39);
+select plan(41);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'a@test.dev'),
@@ -157,6 +157,12 @@ select is((select count(*)::int from public.get_occupancy_history(
 select throws_ok(
   $$ select * from public.get_occupancy_history(9001, now(), now(), '5 min') $$,
   '22023', null, 'intervalo inválido falla con error de parámetro');
+select throws_ok(
+  $$ select * from public.get_occupancy_history(9001, '2026-01-02', '2026-01-01', '1 hour') $$,
+  '22023', null, 'rango con to_ts <= from_ts falla con 22023');
+select throws_ok(
+  $$ select * from public.get_occupancy_history(9001, '2026-01-01', '2026-06-01', '1 day') $$,
+  '22023', null, 'rango mayor a 93 días falla con 22023');
 reset role;
 
 -- ===== Realtime y cron =====
