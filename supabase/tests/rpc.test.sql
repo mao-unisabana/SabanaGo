@@ -1,6 +1,6 @@
 -- Pruebas de RPC, ingesta y tiempo real (tarea 4.1).
 begin;
-select plan(35);
+select plan(39);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'a@test.dev'),
@@ -56,6 +56,25 @@ select is(public.ingest_space_states(9001, '[{"space_id":9201,"status":"occupied
 reset role;
 select is((select status::text from public.space_state where space_id = 9201), 'no_data',
   'puesto de la cámara 2 sigue en no_data');
+
+-- Zona apagada y puesto inactivo: la ingesta los ignora
+update public.zone set is_active = false where id = 9001;
+set local role service_role;
+select is(public.ingest_space_states(9001, '[{"space_id":9103,"status":"occupied","confidence":0.99}]'), 0,
+  'puesto de zona apagada no cuenta en el retorno');
+reset role;
+select is((select status::text from public.space_state where space_id = 9103), 'no_data',
+  'puesto de zona apagada sigue en no_data');
+update public.zone set is_active = true where id = 9001;
+update public.space_state set status = 'free' where space_id = 9103;
+update public.space set is_active = false where id = 9103;
+set local role service_role;
+select is(public.ingest_space_states(9001, '[{"space_id":9103,"status":"occupied","confidence":0.99}]'), 0,
+  'puesto inactivo no cuenta en el retorno');
+reset role;
+select is((select status::text from public.space_state where space_id = 9103), 'free',
+  'puesto inactivo conserva su estado');
+update public.space set is_active = true where id = 9103;
 
 -- Lote vacío: solo latido
 update public.camera set is_online = false, last_seen_at = now() - interval '1 hour' where id = 9001;

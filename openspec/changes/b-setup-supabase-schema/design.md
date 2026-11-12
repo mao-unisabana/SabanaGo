@@ -77,7 +77,7 @@ Vista `camera_status`: `id, parking_lot_id, name, is_online, last_seen_at` (sin 
 | `admin_delete_space` | `(space_id bigint) → void` | definer + `is_admin()` | authenticated |
 
 - Negación: si `is_admin()` es falso se lanza `raise exception using errcode = '42501'`, que PostgREST convierte en 403 con sesión. Sin `GRANT EXECUTE` a `anon`, el visitante recibe 401.
-- `ingest_space_states`: por cada elemento cuyo puesto tenga `camera_id` igual al recibido, aplica `status` (o `no_data` si `confidence < 0.7`) con `updated_at = now()`; al final actualiza `camera.last_seen_at = now(), is_online = true`.
+- `ingest_space_states`: por cada elemento cuyo puesto tenga `camera_id` igual al recibido, aplica `status` (o `no_data` si `confidence < 0.7`) con `updated_at = now()`, ignorando los puestos con `space.is_active = false` o de una zona con `is_active = false` (no se aplican ni cuentan en el entero devuelto); al final actualiza `camera.last_seen_at = now(), is_online = true`.
 - `get_occupancy_history`: `bucket` en `'15 min'`, `'1 hour'`, `'1 day'`; para cada inicio de intervalo toma el último estado registrado de cada puesto activo y calcula `occupied / (free + occupied)`. Los `no_data` no cuentan.
 - `pg_cron`: `cron.schedule('mark-stale-cameras', '5 seconds', 'select public.mark_stale_cameras()')`. Requiere pg_cron 1.5 o superior (nota 10).
 - Realtime: `alter publication supabase_realtime add table public.space_state`.

@@ -93,8 +93,10 @@ begin
            updated_at = now()
       from incoming i
       join public.space sp on sp.id = i.space_id
+      join public.zone z on z.id = sp.zone_id
      where ss.space_id = sp.id
        and sp.camera_id = ingest_space_states.camera_id
+       and sp.is_active and z.is_active
     returning 1
   )
   select count(*) into applied from upd;

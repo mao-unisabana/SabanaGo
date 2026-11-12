@@ -31,6 +31,17 @@ La ingesta SHALL ignorar los puestos que no pertenecen a la cámara que envía e
 - **WHEN** la cámara 1 envía un estado del puesto de la cámara 2
 - **THEN** ese estado no se aplica
 
+### Requirement: Puestos y zonas inactivos
+La ingesta SHALL ignorar los puestos inactivos y los de una zona apagada, sin contarlos en el resultado, y SHALL registrar igual el latido de la cámara.
+
+#### Scenario: Zona apagada
+- **WHEN** la detección envía un estado de un puesto cuya zona tiene `is_active = false`
+- **THEN** el puesto sigue en `no_data`, el estado no se cuenta como aplicado y la cámara registra su latido
+
+#### Scenario: Puesto inactivo
+- **WHEN** la detección envía un estado de un puesto con `is_active = false`
+- **THEN** ese estado no se aplica ni se cuenta
+
 ### Requirement: Cámara sin latido
 Los puestos de una cámara sin latido por más de 5 segundos SHALL pasar a `no_data` y la cámara a fuera de línea (RF-08, RNF-08).
 
