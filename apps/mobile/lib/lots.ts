@@ -1,4 +1,4 @@
-import type { Counts, LatLng, SpotFeature } from '../components/Map'
+import type { Counts, LatLng, SpotFeature, SpotStatus } from '../components/Map'
 
 export interface Lot {
   id: string
@@ -11,8 +11,33 @@ export interface Lot {
 }
 
 export function countsOf(spots: SpotFeature[]): Counts {
-  const free = spots.filter((s) => s.properties.state === 'free').length
-  return { free, busy: spots.length - free, total: spots.length }
+  let free = 0, occupied = 0, noData = 0
+  for (const s of spots) {
+    if (s.properties.status === 'free') free++
+    else if (s.properties.status === 'occupied') occupied++
+    else noData++
+  }
+  return { free, occupied, noData, total: spots.length }
+}
+
+/** Estado válido; `busy` (formato anterior) pasa a `occupied` y todo lo desconocido a `no_data`. */
+export function normalizeStatus(value: unknown): SpotStatus {
+  if (value === 'free' || value === 'occupied' || value === 'no_data') return value
+  if (value === 'busy') return 'occupied'
+  return 'no_data'
+}
+
+/** Migra al leer de AsyncStorage: `properties.state` (viejo) o `status` → `status` normalizado. */
+export function migrateSpots(spots: any[]): SpotFeature[] {
+  return spots.map((s) => {
+    const { state, status, ...rest } = s.properties ?? {}
+    return { ...s, properties: { ...rest, status: normalizeStatus(status ?? state) } }
+  })
+}
+
+/** Migra los puestos de todos los parqueaderos guardados. */
+export function migrateLots(lots: any[]): Lot[] {
+  return lots.map((l) => ({ ...l, spots: migrateSpots(l.spots ?? []) }))
 }
 
 /** Centroide [lng, lat] de un anillo de puntos; null si está vacío. */
@@ -97,7 +122,7 @@ export interface NearestSpot {
 export function nearestFreeSpot(lot: Lot, p: LatLng): NearestSpot | null {
   let best: NearestSpot | null = null
   for (const s of lot.spots) {
-    if (s.properties.state !== 'free') continue
+    if (s.properties.status !== 'free') continue
     const center = spotCenter(s)
     const dist = distanceMeters(p, center)
     if (!best || dist < best.dist) best = { id: s.properties.id, center, dist }

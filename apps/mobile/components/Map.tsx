@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, type ComponentType, type Ref } from 'react'
 import { View } from 'react-native'
+import { theme } from '../lib/theme'
 import { WebView as RNWebView, type WebViewProps } from 'react-native-webview'
 
 // react-native-webview@14 aún no cuadra con los tipos de clase de React 19.3
@@ -17,16 +18,19 @@ export interface ZoneGeo {
   active: boolean
 }
 
+export type SpotStatus = 'free' | 'occupied' | 'no_data'
+
 export interface SpotFeature {
   type: 'Feature'
   id: number
-  properties: { id: number; batch: number; state: 'free' | 'busy' }
+  properties: { id: number; batch: number; status: SpotStatus }
   geometry: { type: 'Polygon'; coordinates: number[][][] }
 }
 
 export interface Counts {
   free: number
-  busy: number
+  occupied: number
+  noData: number
   total: number
 }
 
@@ -201,7 +205,7 @@ export function Map({
             // mensaje no-JSON: ignorar
           }
         }}
-        style={{ flex: 1, backgroundColor: '#F5EEDD' }}
+        style={{ flex: 1, backgroundColor: theme.background }}
       />
     </View>
   )
@@ -216,24 +220,33 @@ function buildHtml(center: LatLng, zoom: number): string {
   const c = `[${center[1]},${center[0]}]`
   return `<!DOCTYPE html><html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"/>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.css"/>
 <style>
-html,body,#map{height:100%;margin:0;background:#F5EEDD}
+html,body,#map{height:100%;margin:0;background:${theme.background}}
 .lot{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;
-  background:rgba(250,245,236,.96);border:2px solid #16587B;border-radius:12px;
+  background:${theme.surface}F5;border:2px solid ${theme.primary};border-radius:12px;
   padding:5px 10px;box-shadow:0 3px 10px rgba(0,0,0,.25);
-  font:700 13px -apple-system,Roboto,sans-serif;color:#202B22}
-.lot span{font-weight:700;font-size:11px;color:#2f9e6f}
+  font:700 13px -apple-system,Roboto,sans-serif;color:${theme.text}}
+.lot span{font-weight:700;font-size:11px;color:${theme.free}}
 </style>
 </head><body>
 <div id="map"></div>
-<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.js"></script>
 <script>
-var map=new maplibregl.Map({container:'map',style:'${CARTO_VOYAGER}',center:${c},zoom:${zoom},attributionControl:false});
+var map=new maplibregl.Map({container:'map',style:'${CARTO_VOYAGER}',center:${c},zoom:${zoom},attributionControl:{compact:true}});
 var MODE='view', ANGLE=0, spots=[], nextId=1, batch=0, draft=[], LANES=[];
 var userMarker=null, rowStart=null, startMarker=null;
 var pendingActive=null, pendingLabels=null, pendingZones=null, pendingRoute=null, pendingLanes=null, lotMarkers=[];
 
+// Rayado diagonal para no_data: fondo gris con franjas claras.
+function stripesImage(){
+  var c=document.createElement('canvas'); c.width=c.height=16;
+  var x=c.getContext('2d');
+  x.fillStyle='${theme.noData}'; x.fillRect(0,0,16,16);
+  x.strokeStyle='rgba(255,255,255,.6)'; x.lineWidth=3;
+  x.beginPath(); x.moveTo(-4,4); x.lineTo(4,-4); x.moveTo(0,16); x.lineTo(16,0); x.moveTo(12,20); x.lineTo(20,12); x.stroke();
+  return x.getImageData(0,0,16,16);
+}
 function fc(){return {type:'FeatureCollection',features:spots};}
 function refresh(){var s=map.getSource('spots'); if(s) s.setData(fc()); post();}
 function post(){
@@ -254,7 +267,7 @@ function rect(lng,lat,deg){
   return ring;
 }
 function addSpot(lng,lat,deg,b){
-  spots.push({type:'Feature',id:nextId,properties:{id:nextId,batch:b,state:'free'},
+  spots.push({type:'Feature',id:nextId,properties:{id:nextId,batch:b,status:'free'},
     geometry:{type:'Polygon',coordinates:[rect(lng,lat,deg)]}});
   nextId++;
 }
@@ -314,36 +327,45 @@ map.on('load',function(){
   // Zonas (contornos) — debajo de todo.
   map.addSource('zones',{type:'geojson',data:zonesFc(pendingZones)});
   map.addLayer({id:'zones-fill',type:'fill',source:'zones',
-    paint:{'fill-color':['case',['get','active'],'#16587B','#84B3CE'],
+    paint:{'fill-color':['case',['get','active'],'${theme.primary}','${theme.primaryLight}'],
            'fill-opacity':['case',['get','active'],0.1,0.22]}});
   map.addLayer({id:'zones-line',type:'line',source:'zones',
-    paint:{'line-color':'#16587B','line-width':2,'line-dasharray':[2,1]}});
+    paint:{'line-color':'${theme.primary}','line-width':2,'line-dasharray':[2,1]}});
   // Carriles del parqueadero activo.
   map.addSource('lanes',{type:'geojson',data:lanesFc(pendingLanes||LANES)});
   if(pendingLanes){LANES=pendingLanes;pendingLanes=null;}
   map.addLayer({id:'lanes-line',type:'line',source:'lanes',
-    paint:{'line-color':'#8a6d2b','line-width':3,'line-dasharray':[1,1],'line-opacity':0.7}});
+    paint:{'line-color':'${theme.lane}','line-width':3,'line-dasharray':[1,1],'line-opacity':0.7}});
   // Espacios — encima de las zonas.
   map.addSource('spots',{type:'geojson',data:fc()});
-  map.addLayer({id:'spots-fill',type:'fill',source:'spots',
-    paint:{'fill-color':['match',['get','state'],'busy','#d7483f','#2f9e6f'],'fill-opacity':0.8}});
+  // Estado desconocido (o no_data) nunca se pinta como libre.
+  var KNOWN=['match',['get','status'],['free','occupied'],true,false];
+  map.addImage('stripes',stripesImage());
+  map.addLayer({id:'spots-fill',type:'fill',source:'spots',filter:KNOWN,
+    paint:{'fill-color':['match',['get','status'],'occupied','${theme.occupied}','${theme.freeFill}'],'fill-opacity':0.9}});
+  map.addLayer({id:'spots-nodata',type:'fill',source:'spots',filter:['!',KNOWN],
+    paint:{'fill-pattern':'stripes','fill-opacity':0.9}});
   map.addLayer({id:'spots-line',type:'line',source:'spots',
-    paint:{'line-color':'#ffffff','line-width':1.5}});
+    paint:{'line-color':['match',['get','status'],'free','${theme.free}','occupied','${theme.occupied}','${theme.noData}'],'line-width':1.5}});
+  // ✕ blanca sobre los ocupados (glifos del estilo de CARTO).
+  map.addLayer({id:'spots-x',type:'symbol',source:'spots',filter:['==',['get','status'],'occupied'],
+    layout:{'text-field':'✕','text-font':['Montserrat SemiBold','Open Sans Bold'],'text-size':14,'text-allow-overlap':true,'text-ignore-placement':true},
+    paint:{'text-color':'#ffffff'}});
   // Ruta al cupo (línea + punto destino) — encima de los espacios.
   map.addSource('route',{type:'geojson',data:pendingRoute||{type:'FeatureCollection',features:[]}});
   map.addLayer({id:'route-line',type:'line',source:'route',filter:['==','$type','LineString'],
-    paint:{'line-color':'#16587B','line-width':4,'line-dasharray':[1.5,1]}});
+    paint:{'line-color':'${theme.primary}','line-width':4,'line-dasharray':[1.5,1]}});
   map.addLayer({id:'route-pt',type:'circle',source:'route',filter:['==','$type','Point'],
-    paint:{'circle-radius':11,'circle-color':'#2f9e6f','circle-stroke-color':'#fff','circle-stroke-width':3}});
+    paint:{'circle-radius':11,'circle-color':'${theme.free}','circle-stroke-color':'#fff','circle-stroke-width':3}});
   pendingRoute=null;
   // Borrador de zona en curso — encima de todo.
   map.addSource('zone-draft',{type:'geojson',data:draftFc()});
   map.addLayer({id:'zd-fill',type:'fill',source:'zone-draft',
-    filter:['==','$type','Polygon'],paint:{'fill-color':'#16587B','fill-opacity':0.15}});
+    filter:['==','$type','Polygon'],paint:{'fill-color':'${theme.primary}','fill-opacity':0.15}});
   map.addLayer({id:'zd-line',type:'line',source:'zone-draft',
-    filter:['==','$type','LineString'],paint:{'line-color':'#16587B','line-width':2}});
+    filter:['==','$type','LineString'],paint:{'line-color':'${theme.primary}','line-width':2}});
   map.addLayer({id:'zd-pts',type:'circle',source:'zone-draft',
-    filter:['==','$type','Point'],paint:{'circle-radius':5,'circle-color':'#16587B','circle-stroke-color':'#fff','circle-stroke-width':2}});
+    filter:['==','$type','Point'],paint:{'circle-radius':5,'circle-color':'${theme.primary}','circle-stroke-color':'#fff','circle-stroke-width':2}});
   pendingZones=null;
   if(pendingLabels){renderLabels(pendingLabels);pendingLabels=null;}
   post();
@@ -370,7 +392,7 @@ map.on('click',function(e){
     if(!rowStart){
       rowStart=[e.lngLat.lng,e.lngLat.lat];
       var el=document.createElement('div');
-      el.style.cssText='width:12px;height:12px;background:#16587B;border:2px solid #fff;border-radius:50%';
+      el.style.cssText='width:12px;height:12px;background:${theme.primary};border:2px solid #fff;border-radius:50%';
       startMarker=new maplibregl.Marker({element:el}).setLngLat(rowStart).addTo(map);
       return;
     }
@@ -378,11 +400,11 @@ map.on('click',function(e){
   }
   // 'view': un espacio tiene prioridad (alternar libre/ocupado)...
   var p=e.point;
-  var hit=map.queryRenderedFeatures(box(p,8),{layers:['spots-fill']});
+  var hit=map.queryRenderedFeatures(box(p,8),{layers:['spots-fill','spots-nodata']});
   if(hit.length){
     var id=hit[0].properties.id;
     spots.forEach(function(f){if(f.properties.id===id)
-      f.properties.state=f.properties.state==='free'?'busy':'free';});
+      f.properties.status=f.properties.status==='free'?'occupied':'free';});
     refresh(); return;
   }
   // ...si no, tocar la zona de otro parqueadero lo selecciona.
@@ -512,7 +534,7 @@ window.setUser=function(lng,lat){
     map.flyTo({center:[lng,lat],zoom:${zoom}});
     if(!userMarker){
       var el=document.createElement('div');
-      el.textContent='🚗'; el.style.fontSize='30px'; el.style.lineHeight='30px';
+      el.innerHTML='<svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="11" fill="${theme.primary}" stroke="#fff" stroke-width="3"/></svg>';
       el.style.filter='drop-shadow(0 2px 3px rgba(0,0,0,.35))';
       userMarker=new maplibregl.Marker({element:el}).setLngLat([lng,lat]).addTo(map);
     } else userMarker.setLngLat([lng,lat]);
