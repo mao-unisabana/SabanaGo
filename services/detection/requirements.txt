@@ -1,0 +1,8 @@
+ultralytics==8.4.211
+opencv-python-headless==4.10.0.84
+shapely==2.2.0
+httpx==0.28.1
+fastapi==0.162.5
+uvicorn==0.54.0
+pytest==9.2.0
+numpy==2.5.1
