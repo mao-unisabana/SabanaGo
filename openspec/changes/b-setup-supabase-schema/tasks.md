@@ -27,7 +27,7 @@ Hitos de Obsidian: 09, 10, 11 (ejecución) y 12 (pasos 3 y 4). Fecha objetivo: j
 
 - [x] 5.1 Escribir `supabase/seed.sql` con Alejandría (zona A, 12 puestos), la Maqueta demo (1 cámara `webcam:0`, 6 puestos) y un admin de prueba solo local; verificación: `get_occupancy` del lote Alejandría devuelve total 12
 - [x] 5.2 Crear el proyecto de demo en Supabase, `supabase link` y `supabase db push`; confirmar la versión de pg_cron y que el cifrado en reposo está activo; verificación: la tarea `mark-stale-cameras` aparece en `cron.job`
-- [ ] 5.3 Revisar con `code-review-graph`, abrir PR a `develop` y compartir las llaves de la demo por canal privado (nunca en el PR); verificación: PR abierto con `supabase test db` en verde
+- [x] 5.3 Revisar con `code-review-graph`, abrir PR a `develop` y compartir las llaves de la demo por canal privado (nunca en el PR); verificación: PR abierto con `supabase test db` en verde
 
 ## Workflow follow-up
 
