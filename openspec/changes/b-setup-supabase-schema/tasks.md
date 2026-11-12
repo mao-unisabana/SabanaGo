@@ -9,8 +9,8 @@ Hitos de Obsidian: 09, 10, 11 (ejecución) y 12 (pasos 3 y 4). Fecha objetivo: j
 
 ## 2. Esquema
 
-- [ ] 2.1 Escribir `migrations/…_001_schema.sql` con extensiones, enums, las 9 tablas, índices y la vista `camera_status` según el diccionario del design; verificación: `supabase db reset` sin errores y `\d space_state` coincide con el diccionario
-- [ ] 2.2 Escribir `…_002_rules.sql` con los 7 triggers y funciones de reglas; agregar pruebas pgTAP en `supabase/tests/rules.test.sql` (estado inicial `no_data`, histórico solo en cambios, zona apagada, cámara de otro parqueadero, perfil al registrarse, favorito duplicado); verificación: `supabase test db` pasa
+- [x] 2.1 Escribir `migrations/…_001_schema.sql` con extensiones, enums, las 9 tablas, índices y la vista `camera_status` según el diccionario del design; verificación: `supabase db reset` sin errores y `\d space_state` coincide con el diccionario
+- [x] 2.2 Escribir `…_002_rules.sql` con los 7 triggers y funciones de reglas; agregar pruebas pgTAP en `supabase/tests/rules.test.sql` (estado inicial `no_data`, histórico solo en cambios, zona apagada, cámara de otro parqueadero, perfil al registrarse, favorito duplicado); verificación: `supabase test db` pasa
 
 ## 3. Seguridad
 
