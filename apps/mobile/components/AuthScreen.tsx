@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Alert, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { theme } from '../lib/theme'
 import { signIn, signUp } from '../lib/api'
+import { PrivacyScreen } from './PrivacyScreen'
 
 const MIN_PASSWORD = 8
 
@@ -14,6 +15,7 @@ export function AuthScreen({ visible, onClose }: { visible: boolean; onClose: ()
   const [accepted, setAccepted] = useState(false)
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
   const [busy, setBusy] = useState(false)
+  const [privacyOpen, setPrivacyOpen] = useState(false)
 
   const canSubmit = !busy && email.trim() !== '' && (!register || accepted)
 
@@ -42,10 +44,6 @@ export function AuthScreen({ visible, onClose }: { visible: boolean; onClose: ()
     }
   }
 
-  // El texto oficial del aviso lo entrega el cambio G.
-  const showPrivacy = () =>
-    Alert.alert('Aviso de privacidad', 'Tratamos tu correo solo para tu cuenta, favoritos y avisos (Ley 1581 de 2012). El texto completo estará disponible pronto.')
-
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.root}>
@@ -63,7 +61,7 @@ export function AuthScreen({ visible, onClose }: { visible: boolean; onClose: ()
             </TouchableOpacity>
             <Text style={styles.consentTxt}>
               Autorizo el tratamiento de mis datos. Leer el{' '}
-              <Text style={styles.link} onPress={showPrivacy}>aviso de privacidad</Text>
+              <Text style={styles.link} onPress={() => setPrivacyOpen(true)}>aviso de privacidad</Text>
             </Text>
           </View>
         )}
@@ -77,6 +75,7 @@ export function AuthScreen({ visible, onClose }: { visible: boolean; onClose: ()
           <Text style={styles.switch}>{register ? 'Ya tengo cuenta' : 'Crear una cuenta'}</Text>
         </TouchableOpacity>
       </View>
+      <PrivacyScreen visible={privacyOpen} onClose={() => setPrivacyOpen(false)} lotName={null} />
     </Modal>
   )
 }

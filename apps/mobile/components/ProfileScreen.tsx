@@ -5,6 +5,7 @@ import { theme } from '../lib/theme'
 import { addFavorite, deleteMyAccount, removeFavorite, signOut, updateFavorite, type Favorite, type Zone } from '../lib/api'
 import { ensureNotificationPermission } from '../lib/hooks'
 import type { Lot } from '../lib/lots'
+import { PrivacyScreen, reportProblem } from './PrivacyScreen'
 
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'] // 1 = lunes ... 7 = domingo
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
@@ -25,6 +26,8 @@ interface Props {
 /** Perfil (cerrar sesión, borrar cuenta) y C05: favoritos con aviso, días y hora. */
 export function ProfileScreen(p: Props) {
   const [err, setErr] = useState('')
+  const [privacyOpen, setPrivacyOpen] = useState(false)
+  const lotName = p.lots.find((l) => l.id === p.activeLotId)?.name ?? null
 
   const run = async (fn: () => Promise<unknown>) => {
     try {
@@ -128,6 +131,12 @@ export function ProfileScreen(p: Props) {
 
         {!!err && <Text style={styles.err}>{err}</Text>}
 
+        <TouchableOpacity style={styles.outline} onPress={() => setPrivacyOpen(true)}>
+          <Text style={styles.outlineTxt}>Privacidad y términos</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.outline} onPress={() => reportProblem(lotName)}>
+          <Text style={styles.outlineTxt}>Reportar un problema</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.outline} onPress={() => run(async () => { await signOut(); p.onClose() })}>
           <Text style={styles.outlineTxt}>Cerrar sesión</Text>
         </TouchableOpacity>
@@ -135,6 +144,7 @@ export function ProfileScreen(p: Props) {
           <Text style={[styles.outlineTxt, { color: theme.occupied }]}>Borrar mi cuenta</Text>
         </TouchableOpacity>
       </ScrollView>
+      <PrivacyScreen visible={privacyOpen} onClose={() => setPrivacyOpen(false)} lotName={lotName} />
     </Modal>
   )
 }
