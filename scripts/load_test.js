@@ -1,5 +1,6 @@
-// RNF-10 (prueba reducida): 50 usuarios virtuales durante 1 minuto con lectura anónima.
-// Uso: k6 run -e SUPABASE_URL=... -e SUPABASE_ANON_KEY=... [-e LOT_ID=1] scripts/load_test.js
+// RNF-10: 500 usuarios virtuales durante 1 minuto con lectura anónima (la meta del requisito).
+// Para una prueba reducida pasa -e VUS=50 y repórtala como "reducida", no como cumplimiento de RNF-10.
+// Uso: k6 run -e SUPABASE_URL=... -e SUPABASE_ANON_KEY=... [-e LOT_ID=1] [-e VUS=500] scripts/load_test.js
 // Las llaves vienen del entorno; el script no las imprime.
 import http from 'k6/http'
 import { check, sleep } from 'k6'
@@ -13,7 +14,7 @@ if (!BASE || !ANON) {
 }
 
 export const options = {
-  vus: 50,
+  vus: Number(__ENV.VUS || 500),
   duration: '1m',
   thresholds: {
     http_req_duration: ['p(95)<3000'], // meta: respuesta <= 3 s en el 95 %

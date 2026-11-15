@@ -13,6 +13,8 @@ export function buildFeedbackUrl(base: string | undefined, version: string, lotN
     const url = new URL(base)
     url.searchParams.set('version', version)
     url.searchParams.set('parqueadero', lotName ?? 'ninguno')
+    // Cognito Forms prellena con ?entry={"Campo":"valor"}; los campos del formulario se llaman Version y Parqueadero.
+    url.searchParams.set('entry', JSON.stringify({ Version: version, Parqueadero: lotName ?? 'ninguno' }))
     return url.toString()
   } catch {
     return null
