@@ -20,6 +20,10 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
     body: 'Conforme a la Ley 1581 de 2012 de protección de datos personales, puedes conocer, actualizar y rectificar tus datos, y solicitar su supresión. El tratamiento se hace con tu autorización, que das al crear la cuenta y puedes retirar cuando quieras.',
   },
   {
+    title: 'Contacto y reclamos',
+    body: 'Responsable: equipo SabanaGO, proyecto Capstone de la Universidad de La Sabana. Para consultas o reclamos escribe a mauriciosuba@unisabana.edu.co. Respondemos las consultas en 10 días hábiles y los reclamos en 15 días hábiles. Si no quedas conforme, puedes acudir a la Superintendencia de Industria y Comercio.',
+  },
+  {
     title: 'Borrar tu cuenta',
     body: 'Tienes derecho a borrar tu cuenta en cualquier momento desde Mi perfil, con la opción "Borrar mi cuenta". Se eliminan tu perfil y tus favoritos.',
   },

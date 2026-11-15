@@ -23,3 +23,23 @@ def test_compare_csv(tmp_path):
     assert err == 25.0  # 1 de 4 mal
     assert matrix[("occupied", "free")] == 1
     assert matrix[("free", "free")] == 1
+
+
+def test_predict_frames_y_summarize():
+    import numpy as np
+
+    vacio = np.full((40, 40, 3), 200, dtype=np.uint8)
+    ref = ma.reference_from_frames([vacio, vacio])
+    carro = vacio.copy()
+    carro[5:20, 5:20] = 20  # oscurece el puesto M1
+    polys = {"M1": [[0, 0], [30, 0], [30, 30], [0, 30]],
+             "M2": [[32, 32], [39, 32], [39, 39], [32, 39]]}
+    preds = ma.predict_frames({0: vacio, 1: carro}, polys, ref, 25.0)
+    assert preds[("0", "M1")] == "free"
+    assert preds[("1", "M1")] == "occupied"
+    assert preds[("1", "M2")] == "free"
+    labels = [("0", "M1", "free"), ("1", "M1", "occupied"), ("1", "M2", "occupied")]
+    kinds = {("1", "M2"): "transicion"}
+    texto = ma.summarize(labels, preds, kinds)
+    assert "Error total: 33.3 %" in texto
+    assert "estables (2): error 0.0 %" in texto
