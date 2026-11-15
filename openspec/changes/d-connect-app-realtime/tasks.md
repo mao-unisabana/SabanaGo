@@ -5,7 +5,7 @@ Hito de Obsidian: 13 (RF-02, RF-03, RF-04, RF-10). Fecha objetivo: vie 13 nov 20
 ## 1. Cliente y datos
 
 - [ ] 1.1 Crear `feature/d-connect-app-realtime`, instalar `@supabase/supabase-js` y `react-native-url-polyfill` con versión exacta, crear `lib/supabase.ts` y `apps/mobile/.env.example` con `EXPO_PUBLIC_SUPABASE_URL` y `EXPO_PUBLIC_SUPABASE_ANON_KEY`; verificación: la app arranca en Expo Go y una consulta a `parking_lot` devuelve los 2 parqueaderos del seed
-- [ ] 1.2 Crear `lib/api.ts` con las consultas de los endpoints 1 a 4 y el mapeo a `SpotFeature` y `Lot`; prueba unitaria del mapeo con una fila de ejemplo (polígono abierto se cierra, `status` correcto, puesto sin estado → `no_data`); verificación: la prueba pasa
+- [x] 1.2 Crear `lib/api.ts` con las consultas de los endpoints 1 a 4 y el mapeo a `SpotFeature` y `Lot`; prueba unitaria del mapeo con una fila de ejemplo (polígono abierto se cierra, `status` correcto, puesto sin estado → `no_data`); verificación: la prueba pasa
 
 ## 2. Pantalla del conductor
 

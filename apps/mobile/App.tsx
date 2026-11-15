@@ -118,6 +118,8 @@ export default function App() {
   // Lot con los puestos en vivo para pintarlo en el mapa.
   const activeLive: Lot | null = active ? { ...active, spots: visibleSpots } : null
   const counts = countsOf(visibleSpots)
+  // Línea base para detectar ediciones del admin: los puestos cargados de la BD.
+  useEffect(() => { prevSpots.current = visibleSpots }, [visibleSpots])
 
   const labels = useMemo<LotLabel[]>(() => {
     const out: LotLabel[] = []
@@ -148,7 +150,7 @@ export default function App() {
       for (const s of spots) {
         const old = prevById[s.properties.id]
         if (!old || old.properties.status !== s.properties.status || old.geometry.coordinates[0].length !== s.geometry.coordinates[0].length) {
-          await adminUpsertSpace({ zone_id: zoneId, code: String(s.properties.id), map_polygon: s.geometry.coordinates[0] })
+          await adminUpsertSpace({ ...(old ? { id: s.properties.id } : { code: String(s.properties.id) }), zone_id: zoneId, map_polygon: s.geometry.coordinates[0] })
         }
       }
       const now = new Set(spots.map((s) => s.properties.id))

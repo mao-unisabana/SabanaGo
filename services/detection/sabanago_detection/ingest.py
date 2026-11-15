@@ -7,6 +7,8 @@ import time
 
 import httpx
 
+MIN_CONFIDENCE = 0.7  # mismo umbral que aplica la RPC en SQL
+
 
 class Ingestor:
     def __init__(self, url, service_key, camera_id, interval_s=1.5,
@@ -56,14 +58,18 @@ class Ingestor:
         """
         now = now if now is not None else time.monotonic()
         changed = []
+        pending = {}
         for sid, (status, conf) in states.items():
-            if self._reported.get(sid) != status:
+            # La BD guarda no_data si la confianza es < umbral; se compara contra eso.
+            effective = status if conf >= MIN_CONFIDENCE else "no_data"
+            if self._reported.get(sid) != effective:
                 changed.append({"space_id": sid, "status": status,
                                 "confidence": conf})
-                self._reported[sid] = status
+                pending[sid] = effective
         due = (now - self._last_sent) >= self.interval_s
         if changed or due:
-            self._post(changed)
+            self._post(changed)  # si falla, no se marca nada y se reintenta
+            self._reported.update(pending)
             self._last_sent = now
             return True
         return False

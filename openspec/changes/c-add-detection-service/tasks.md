@@ -4,14 +4,14 @@ Hitos de Obsidian: 13 (RF-01, RF-08) y 12 (paso 5, Dockerfile). Fecha objetivo: 
 
 ## 1. Esqueleto
 
-- [ ] 1.1 Crear `feature/c-add-detection-service`, el paquete `services/detection/sabanago_detection/` con `config.py`, `requirements.txt` con versiones exactas (`ultralytics`, `opencv-python-headless`, `shapely`, `httpx`, `fastapi`, `uvicorn`, `pytest`) y agregar las variables nuevas a `.env.example`; verificación: `python -c "import sabanago_detection"` funciona en un venv limpio
-- [ ] 1.2 Implementar `source.py` (webcam, archivo en bucle, RTSP, reintento cada 2 s); verificación: prueba pytest con un video corto generado en la prueba que confirma la lectura y el bucle
+- [x] 1.1 Crear `feature/c-add-detection-service`, el paquete `services/detection/sabanago_detection/` con `config.py`, `requirements.txt` con versiones exactas (`ultralytics`, `opencv-python-headless`, `shapely`, `httpx`, `fastapi`, `uvicorn`, `pytest`) y agregar las variables nuevas a `.env.example`; verificación: `python -c "import sabanago_detection"` funciona en un venv limpio
+- [x] 1.2 Implementar `source.py` (webcam, archivo en bucle, RTSP, reintento cada 2 s); verificación: prueba pytest con un video corto generado en la prueba que confirma la lectura y el bucle
 
 ## 2. Decisión por puesto
 
-- [ ] 2.1 Implementar el cálculo de cobertura caja–polígono y `detectors/yolo.py`; pruebas pytest con cajas sintéticas: 30 % → `occupied`, 10 % → `free`, puesto sin polígono omitido; verificación: `pytest` pasa
-- [ ] 2.2 Implementar `detectors/diff.py` con captura de referencia; pruebas con imágenes sintéticas (puesto vacío vs. rectángulo pintado); verificación: `pytest` pasa
-- [ ] 2.3 Implementar `smoothing.py` con voto de 3 cuadros; prueba de un cuadro aislado que no cambia el estado; verificación: `pytest` pasa
+- [x] 2.1 Implementar el cálculo de cobertura caja–polígono y `detectors/yolo.py`; pruebas pytest con cajas sintéticas: 30 % → `occupied`, 10 % → `free`, puesto sin polígono omitido; verificación: `pytest` pasa
+- [x] 2.2 Implementar `detectors/diff.py` con captura de referencia; pruebas con imágenes sintéticas (puesto vacío vs. rectángulo pintado); verificación: `pytest` pasa
+- [x] 2.3 Implementar `smoothing.py` con voto de 3 cuadros; prueba de un cuadro aislado que no cambia el estado; verificación: `pytest` pasa
 
 ## 3. Salida a Supabase
 
