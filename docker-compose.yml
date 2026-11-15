@@ -1,0 +1,13 @@
+services:
+  detection:
+    build: ./services/detection
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # referencia del detector diff y videos de prueba
+      - ./data:/app/data
+    # webcam en Linux: descomentar para montar el dispositivo
+    # devices:
+    #   - /dev/video0:/dev/video0
+    restart: unless-stopped
