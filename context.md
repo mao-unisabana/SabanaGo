@@ -31,7 +31,7 @@ App que muestra en tiempo real los puestos libres de un parqueadero grande, dete
 - No guardar imágenes de las cámaras; solo el estado de cada puesto (Habeas Data, Ley 1581/2012).
 - Agregar zonas o parqueaderos no debe cambiar el modelo de datos.
 - Las métricas (precisión ≤5% de error, tiempos) se reportan tal cual; no se ajustan las metas.
-- Congelamiento de funciones: 13 nov 2026. Entrega final: 21 nov 2026.
+- Demo interna: 14 nov 2026. Congelamiento de funciones: 15 nov 2026. Entrega final (plazo máximo): martes 17 nov 2026.
 
 ## Contexto de negocio
 - Problema: tiempo perdido y emisiones por dar vueltas buscando parqueadero.

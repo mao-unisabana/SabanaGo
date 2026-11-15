@@ -1,0 +1,49 @@
+schema: spec-driven
+
+context: |
+  Language: es
+  All artifacts must be written in es.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Proyecto: SabanaGO, app que muestra en tiempo real los puestos libres de un
+  parqueadero detectados con cámaras y visión por computador. Capstone de la
+  Universidad de La Sabana, piloto en el C.C. Alejandría (Cajicá, 30–45 puestos).
+  Contexto completo en context.md y reglas del repo en CLAUDE.md.
+
+  Stack: Expo SDK 58 · React Native · TypeScript (apps/mobile) · Supabase
+  (PostgreSQL, Auth con correo y contraseña, Realtime, RLS, pg_cron) en supabase/ ·
+  Python 3.11 · YOLOv8n · OpenCV en Docker (services/detection).
+
+  Fuente de verdad del diseño: notas del Obsidian de Mao en Capstone/Cronograma
+  (09 DER v1.1, 10 APIs y webhooks, 11 Seguridad y Auth, 07 UI kit v1.1,
+  05 user flow, 04 MoSCoW). Los planes en openspec/changes ya traen lo necesario
+  de esas notas; si algo choca, gana la nota y se avisa a Mao.
+
+  Alcance (MoSCoW): Must RF-01, RF-02, RF-03, RF-08, RF-10. Should RF-04, RF-05,
+  RF-06, RF-07. Could RF-09. Won't: tiendas, push nativo en segundo plano,
+  reservas, pagos, ruteo interno, sensores IoT, CI/CD y dominio productivo.
+
+  Fechas: demo interna sáb 14 nov 2026, congelamiento dom 15 nov, entrega final
+  mar 17 nov 2026 (plazo máximo).
+
+rules:
+  proposal:
+    - Nombrar el hito de Obsidian (01–23) que el cambio ayuda a cerrar.
+    - Decir explícitamente qué queda fuera del alcance.
+  design:
+    - Toda decisión que se aparte de las notas 09, 10, 11 o 07 se marca como desviación y se justifica.
+  tasks:
+    - Tareas de máximo 2 horas, cada una con su forma de verificarla.
+    - Nada fuera del Must sin preguntar a Mao (regla del CLAUDE.md).
+
+operations:
+  apply:
+    guidance:
+      - Trabajar en una rama feature/<id-del-cambio> creada desde develop; nunca commit ni push directo a main o develop.
+      - Código, identificadores y base de datos en inglés; comentarios y mensajes de commit en español.
+      - No crear archivos .md de documentación nuevos; las explicaciones van en el chat o en comentarios del código.
+      - Antes de marcar el cambio como terminado, revisar con el MCP code-review-graph si está disponible.
+      - Al terminar, abrir PR a develop y entregar un resumen corto para que Mao actualice Obsidian.
+  archive:
+    guidance:
+      - Archivar solo después de que el PR del cambio esté mergeado en develop.

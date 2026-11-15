@@ -31,6 +31,18 @@ Antes de ejecutar cualquier cosa:
 - No crear archivos `.md` de documentación adicionales. Las explicaciones van en el chat; `docs/` solo se toca cuando se pida.
 - Antes de implementar algo fuera de la lista Must del MoSCoW (ver context.md), preguntar.
 
+## Secretos y variables de entorno
+
+| Archivo (ignorado por Git) | Plantilla versionada | Contenido | Quién lo usa |
+|---|---|---|---|
+| `.env` (raíz) | `.env.example` | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, config de detección | `services/detection` (service_role) |
+| `apps/mobile/.env` | `apps/mobile/.env.example` | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` | app Expo (solo llave anon) |
+
+- Nunca leer, imprimir, copiar ni hacer `cat`/`grep`/`source` de un `.env` real. Para saber si una variable está llena, preguntar a Mao.
+- Para cambiar qué variables existen, editar solo el `.env.example` correspondiente y avisar a Mao que actualice su `.env`.
+- Mao pega las llaves a mano; nunca pedirlas por el chat ni escribirlas en código, PRs, commits o logs.
+- La `service_role` nunca va en `apps/mobile/` ni en ninguna variable `EXPO_PUBLIC_`.
+
 ## Qué NO hacer
 
 - No ejecutar tareas desde el agente global
