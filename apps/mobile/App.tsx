@@ -15,9 +15,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { Map, type LatLng, type LotLabel, type Mode, type SpotFeature, type ZoneGeo } from './components/Map'
 import { countsOf, lotCenter, lotContaining, nearestFreeSpot, type Lot } from './lib/lots'
 import { theme } from './lib/theme'
-import { useLotData, useLiveSpaces } from './lib/hooks'
+import { useLotData, useLiveSpaces, useSession, useFavorites, useFreeSpotAlerts } from './lib/hooks'
 import { fetchZones, fetchOccupancy, fetchCameras, adminUpsertSpace, adminDeleteSpace, type Zone, type Occupancy, type Camera } from './lib/api'
 import { supabase } from './lib/supabase'
+import { AuthScreen } from './components/AuthScreen'
+import { ProfileScreen } from './components/ProfileScreen'
 
 const HINTS: Record<Mode, string> = {
   view: 'Toca un espacio para marcar libre/ocupado',
@@ -49,7 +51,10 @@ export default function App() {
   const [clearNonce, setClearNonce] = useState(0)
   const [finishNonce, setFinishNonce] = useState(0)
   const [target, setTarget] = useState<{ center: LatLng; dist: number; text: string } | null>(null)
-  const [session, setSession] = useState<unknown>(null)
+  const { session } = useSession()
+  const [authOpen, setAuthOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const pendingZone = useRef<string | null>(null) // zona a abrir tras cambiar de parqueadero
   const [login, setLogin] = useState<null | { email: string; pass: string; err: string }>(null)
   const [tick, setTick] = useState(0) // refresca el texto "hace N s"
   const prevSpots = useRef<SpotFeature[]>([])
@@ -71,19 +76,25 @@ export default function App() {
     })()
   }, [])
 
-  // Sesión admin existente.
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
-    return () => data.subscription.unsubscribe()
-  }, [])
+  const userId = session?.user.id ?? null
+  const { favorites, reload: reloadFavorites } = useFavorites(userId)
+
+  // Abre la zona de un aviso (notificación o banner C06).
+  const openZone = ({ lotId, zoneId: zId }: { lotId: string; zoneId: string }) => {
+    if (lotId === activeId) { setZoneId(zId); return }
+    pendingZone.current = zId
+    setActiveId(lotId)
+  }
+  const alerts = useFreeSpotAlerts(favorites, openZone)
 
   // Zonas del parqueadero activo.
   useEffect(() => {
     if (!activeId) { setZones([]); setZoneId(null); return }
     fetchZones(activeId).then((zs) => {
       setZones(zs)
-      setZoneId(zs[0]?.id ?? null)
+      const wanted = pendingZone.current
+      pendingZone.current = null
+      setZoneId(zs.find((z) => z.id === wanted)?.id ?? zs[0]?.id ?? null)
     }).catch(() => setZones([]))
   }, [activeId])
 
@@ -223,6 +234,10 @@ export default function App() {
               <Text style={styles.title}>{active ? active.name : loading ? 'Cargando…' : error ? 'Sin conexión' : 'Sin parqueadero'}</Text>
               <Text style={styles.sub}>{active ? liveLabel : error ? 'Revisa tu conexión' : 'Abre con conexión para empezar'}</Text>
             </View>
+            {/* Favoritos: sin sesión lleva a C04 */}
+            <TouchableOpacity style={styles.modeBtn} onPress={() => (session ? setProfileOpen(true) : setAuthOpen(true))} accessibilityLabel="Guardar como favorito">
+              <MaterialCommunityIcons name={session ? 'heart' : 'heart-outline'} size={18} color={theme.text} />
+            </TouchableOpacity>
             <TouchableOpacity style={[styles.modeBtn, isAdmin && styles.toolOn]} onPress={switchAppMode}>
               <MaterialCommunityIcons name={isAdmin ? 'shield-account' : 'steering'} size={18} color={isAdmin ? theme.onPrimary : theme.text} />
               <Text style={[styles.toolTxt, isAdmin && styles.toolTxtOn]}>{isAdmin ? 'Administrador' : 'Conductor'}</Text>
@@ -307,6 +322,18 @@ export default function App() {
           </View>
         )}
 
+        {/* C06: aviso dentro de la app cuando no hay permiso de notificaciones */}
+        {alerts.banner && (
+          <View style={[styles.banner, styles.bannerOk, styles.alertBanner]}>
+            <TouchableOpacity style={styles.bannerBody} onPress={alerts.openBanner}>
+              <Text style={styles.bannerTxt}>{alerts.banner.text}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={alerts.dismissBanner}>
+              <MaterialCommunityIcons name="close" size={18} color={theme.textSecondary} style={styles.bannerX} />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {lots.length > 0 && (
           <TouchableOpacity style={[styles.fab, styles.iconRow]} activeOpacity={0.85} onPress={findNearest}>
             <MaterialCommunityIcons name="compass-outline" size={20} color={theme.onPrimary} />
@@ -345,6 +372,22 @@ export default function App() {
               <Text style={styles.statL}>Total lote</Text>
             </View>
           </View>
+        )}
+
+        <AuthScreen visible={authOpen && !session} onClose={() => setAuthOpen(false)} />
+        {session && (
+          <ProfileScreen
+            visible={profileOpen}
+            onClose={() => setProfileOpen(false)}
+            userId={session.user.id}
+            email={session.user.email ?? ''}
+            lots={lots}
+            zones={zones}
+            activeLotId={activeId}
+            activeZoneId={zoneId}
+            favorites={favorites}
+            onChanged={reloadFavorites}
+          />
         )}
 
         {/* Login admin */}
@@ -416,6 +459,8 @@ const styles = StyleSheet.create({
   fabTxt: { color: theme.onPrimary, fontSize: 15, fontWeight: '800' },
   banner: { position: 'absolute', left: 14, right: 14, bottom: 172, flexDirection: 'row', alignItems: 'center', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16, ...shadow },
   camBanner: { bottom: 230 },
+  alertBanner: { bottom: 288 },
+  bannerBody: { flex: 1 },
   bannerOk: { backgroundColor: theme.primaryTint },
   bannerWarn: { backgroundColor: theme.occupiedTint },
   bannerTxt: { flex: 1, fontSize: 14, fontWeight: '800', color: theme.text },
