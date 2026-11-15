@@ -8,12 +8,13 @@ import json
 import threading
 import time
 
-from . import config
+from . import config, preview
 from .ingest import Ingestor
 from .smoothing import Smoother
-from .source import VideoSource
+from .source import FrameReader, VideoSource
 
 _healthy = {"ok": True}
+_holder = preview.FrameHolder()  # solo se usa con PREVIEW activo
 
 
 def _log(**kw):
@@ -29,7 +30,7 @@ def _build_detector(cfg):
     return d.detect
 
 
-def _start_health():
+def _start_health(cfg=None):
     from fastapi import FastAPI
     import uvicorn
 
@@ -38,6 +39,9 @@ def _start_health():
     @app.get("/health")
     def health():
         return {"ok": _healthy["ok"]}
+
+    if cfg is not None and cfg.preview:
+        preview.add_routes(app, _holder)
 
     t = threading.Thread(
         target=lambda: uvicorn.run(app, host="0.0.0.0", port=8000,
@@ -50,6 +54,12 @@ def _start_health():
 def run(cfg=None, max_iters=None):
     cfg = cfg or config.load()
     src = VideoSource(cfg.video_source)
+    publisher = None
+    if cfg.preview:
+        publisher = preview.PreviewPublisher(_holder, cfg.detector)
+    if src.is_file or cfg.preview:
+        # tiempo real: el lector avanza a fps nativo; la deteccion toma el ultimo cuadro
+        src = FrameReader(src, on_frame=publisher.publish if publisher else None)
     ing = Ingestor(cfg.supabase_url, cfg.service_role_key, cfg.camera_id,
                    cfg.ingest_interval_s)
     detect = _build_detector(cfg)
@@ -72,6 +82,9 @@ def run(cfg=None, max_iters=None):
             stable = {sid: (smoother.update(sid, st), conf)
                       for sid, (st, conf) in raw.items()}
             sent = ing.push(stable)
+            if publisher:  # el overlay del lector usa este resultado (solo memoria)
+                publisher.update_result(
+                    spaces, stable, round((time.monotonic() - t0) * 1000, 1))
             _log(event="frame", camera=cfg.camera_id, spaces=len(stable),
                  sent=sent, frame_ms=round((time.monotonic() - t0) * 1000, 1))
         except Exception as e:  # noqa: BLE001 - loguear y seguir
@@ -82,8 +95,9 @@ def run(cfg=None, max_iters=None):
 
 
 def main():
-    _start_health()
-    run()
+    cfg = config.load()
+    _start_health(cfg)
+    run(cfg)
 
 
 if __name__ == "__main__":

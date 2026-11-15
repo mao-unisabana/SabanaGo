@@ -13,6 +13,7 @@ class Config:
     confidence_threshold: float
     ingest_interval_s: float
     diff_threshold: float
+    preview: bool = False
 
 
 def load() -> Config:
@@ -25,4 +26,5 @@ def load() -> Config:
         confidence_threshold=float(os.environ.get("CONFIDENCE_THRESHOLD", "0.7")),
         ingest_interval_s=float(os.environ.get("INGEST_INTERVAL_S", "1.5")),
         diff_threshold=float(os.environ.get("DIFF_THRESHOLD", "25")),
+        preview=os.environ.get("PREVIEW", "").strip().lower() in ("1", "true"),
     )
