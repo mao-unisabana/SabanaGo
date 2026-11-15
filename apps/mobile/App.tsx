@@ -20,6 +20,8 @@ import { fetchZones, fetchOccupancy, fetchCameras, adminUpsertSpace, adminDelete
 import { supabase } from './lib/supabase'
 import { AuthScreen } from './components/AuthScreen'
 import { ProfileScreen } from './components/ProfileScreen'
+import { PrivacyScreen } from './components/PrivacyScreen'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 const HINTS: Record<Mode, string> = {
   view: 'Toca un espacio para marcar libre/ocupado',
@@ -36,7 +38,7 @@ function agoText(ms: number | null): string {
   return `Última actualización hace ${Math.round(s / 60)} min`
 }
 
-export default function App() {
+function AppContent() {
   const [loc, setLoc] = useState<LatLng | null>(null)
   const { lots, loading, error, reload } = useLotData()
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -54,6 +56,7 @@ export default function App() {
   const { session } = useSession()
   const [authOpen, setAuthOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [privacyOpen, setPrivacyOpen] = useState(false)
   const pendingZone = useRef<string | null>(null) // zona a abrir tras cambiar de parqueadero
   const [login, setLogin] = useState<null | { email: string; pass: string; err: string }>(null)
   const [tick, setTick] = useState(0) // refresca el texto "hace N s"
@@ -234,6 +237,9 @@ export default function App() {
               <Text style={styles.title}>{active ? active.name : loading ? 'Cargando…' : error ? 'Sin conexión' : 'Sin parqueadero'}</Text>
               <Text style={styles.sub}>{active ? liveLabel : error ? 'Revisa tu conexión' : 'Abre con conexión para empezar'}</Text>
             </View>
+            <TouchableOpacity style={styles.modeBtn} onPress={() => setPrivacyOpen(true)} accessibilityLabel="Privacidad y términos">
+              <MaterialCommunityIcons name="information-outline" size={18} color={theme.text} />
+            </TouchableOpacity>
             {/* Favoritos: sin sesión lleva a C04 */}
             <TouchableOpacity style={styles.modeBtn} onPress={() => (session ? setProfileOpen(true) : setAuthOpen(true))} accessibilityLabel="Guardar como favorito">
               <MaterialCommunityIcons name={session ? 'heart' : 'heart-outline'} size={18} color={theme.text} />
@@ -374,6 +380,7 @@ export default function App() {
           </View>
         )}
 
+        <PrivacyScreen visible={privacyOpen} onClose={() => setPrivacyOpen(false)} lotName={active?.name ?? null} />
         <AuthScreen visible={authOpen && !session} onClose={() => setAuthOpen(false)} />
         {session && (
           <ProfileScreen
@@ -412,6 +419,14 @@ export default function App() {
         </Modal>
       </View>
     </SafeAreaProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   )
 }
 

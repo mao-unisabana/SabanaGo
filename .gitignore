@@ -33,3 +33,6 @@ Thumbs.db
 .vscode/
 .idea/
 services/detection/data/
+
+# Respaldos de la base (contienen datos)
+backups/
