@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,7 +10,7 @@ import {
   View,
 } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Location from 'expo-location'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { Map, type LatLng, type LotLabel, type Mode, type SpotFeature, type ZoneGeo } from './components/Map'
@@ -21,6 +22,7 @@ import { supabase } from './lib/supabase'
 import { AuthScreen } from './components/AuthScreen'
 import { ProfileScreen } from './components/ProfileScreen'
 import { PrivacyScreen } from './components/PrivacyScreen'
+import { LotPicker } from './components/LotPicker'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
 const HINTS: Record<Mode, string> = {
@@ -57,6 +59,11 @@ function AppContent() {
   const [authOpen, setAuthOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  // Pie dinámico: respeta la barra de gestos/navegación del dispositivo.
+  const insets = useSafeAreaInsets()
+  const base = Math.max(24, insets.bottom + 8)
   const pendingZone = useRef<string | null>(null) // zona a abrir tras cambiar de parqueadero
   const [login, setLogin] = useState<null | { email: string; pass: string; err: string }>(null)
   const [tick, setTick] = useState(0) // refresca el texto "hace N s"
@@ -209,7 +216,7 @@ function AppContent() {
   const liveLabel = agoText(live.updatedAt)
 
   return (
-    <SafeAreaProvider>
+    <>
       <StatusBar style="dark" />
       <View style={styles.root}>
         <Map
@@ -231,44 +238,47 @@ function AppContent() {
           onSelectLot={setActiveId}
         />
 
+        {menuOpen && <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenuOpen(false)} accessibilityLabel="Cerrar menú" />}
+
         <SafeAreaView style={styles.topWrap} pointerEvents="box-none">
           <View style={styles.topbar}>
-            <View style={styles.topText}>
-              <Text style={styles.title}>{active ? active.name : loading ? 'Cargando…' : error ? 'Sin conexión' : 'Sin parqueadero'}</Text>
+            <TouchableOpacity style={styles.topText} onPress={() => setPickerOpen(true)} disabled={!lots.length} accessibilityLabel="Elegir parqueadero">
+              <View style={styles.iconRow}>
+                <Text style={[styles.title, styles.titleFlex]} numberOfLines={1}>{active ? active.name : loading ? 'Cargando…' : error ? 'Sin conexión' : 'Sin parqueadero'}</Text>
+                {lots.length > 0 && <MaterialCommunityIcons name="chevron-down" size={18} color={theme.text} />}
+              </View>
               <Text style={styles.sub}>{active ? liveLabel : error ? 'Revisa tu conexión' : 'Abre con conexión para empezar'}</Text>
-            </View>
-            <TouchableOpacity style={styles.modeBtn} onPress={() => setPrivacyOpen(true)} accessibilityLabel="Privacidad y términos">
-              <MaterialCommunityIcons name="information-outline" size={18} color={theme.text} />
             </TouchableOpacity>
             {/* Favoritos: sin sesión lleva a C04 */}
             <TouchableOpacity style={styles.modeBtn} onPress={() => (session ? setProfileOpen(true) : setAuthOpen(true))} accessibilityLabel="Guardar como favorito">
               <MaterialCommunityIcons name={session ? 'heart' : 'heart-outline'} size={18} color={theme.text} />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.modeBtn, isAdmin && styles.toolOn]} onPress={switchAppMode}>
-              <MaterialCommunityIcons name={isAdmin ? 'shield-account' : 'steering'} size={18} color={isAdmin ? theme.onPrimary : theme.text} />
-              <Text style={[styles.toolTxt, isAdmin && styles.toolTxtOn]}>{isAdmin ? 'Administrador' : 'Conductor'}</Text>
+            <TouchableOpacity style={[styles.modeBtn, isAdmin && styles.toolOn]} onPress={() => setMenuOpen((o) => !o)} accessibilityLabel="Más opciones">
+              <MaterialCommunityIcons name="dots-vertical" size={18} color={isAdmin ? theme.onPrimary : theme.text} />
             </TouchableOpacity>
           </View>
 
-          {/* Selector de parqueadero */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
-            {lots.map((l) => {
-              const on = l.id === activeId
-              return (
-                <TouchableOpacity key={l.id} style={[styles.chip, on && styles.chipOn]} onPress={() => setActiveId(l.id)}>
-                  <Text style={[styles.chipTxt, on && styles.chipTxtOn]}>{l.name}</Text>
-                </TouchableOpacity>
-              )
-            })}
-            {!loading && !lots.length && (
+          {menuOpen && (
+            <View style={styles.menu}>
+              <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuOpen(false); setPrivacyOpen(true) }} accessibilityLabel="Privacidad y términos">
+                <Text style={styles.menuTxt}>Privacidad y términos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuOpen(false); switchAppMode() }} accessibilityLabel="Cambiar modo de la app">
+                <Text style={styles.menuTxt}>Modo: {isAdmin ? 'Administrador' : 'Conductor'} ›</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {!loading && !lots.length && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
               <TouchableOpacity style={styles.chip} onPress={reload}>
                 <Text style={styles.chipTxt}>Reintentar</Text>
               </TouchableOpacity>
-            )}
-          </ScrollView>
+            </ScrollView>
+          )}
 
           {/* Filtro por zona */}
-          {zones.length > 0 && (
+          {zones.length > 1 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
               {zones.map((z) => {
                 const on = z.id === zoneId
@@ -323,14 +333,14 @@ function AppContent() {
 
         {/* Aviso de cámara sin señal */}
         {cameraDown && (
-          <View style={[styles.banner, styles.bannerWarn, styles.camBanner]}>
+          <View style={[styles.banner, styles.bannerWarn, { bottom: base + 206 }]}>
             <Text style={styles.bannerTxt}>Cámara sin señal</Text>
           </View>
         )}
 
         {/* C06: aviso dentro de la app cuando no hay permiso de notificaciones */}
         {alerts.banner && (
-          <View style={[styles.banner, styles.bannerOk, styles.alertBanner]}>
+          <View style={[styles.banner, styles.bannerOk, { bottom: base + 264 }]}>
             <TouchableOpacity style={styles.bannerBody} onPress={alerts.openBanner}>
               <Text style={styles.bannerTxt}>{alerts.banner.text}</Text>
             </TouchableOpacity>
@@ -341,14 +351,14 @@ function AppContent() {
         )}
 
         {lots.length > 0 && (
-          <TouchableOpacity style={[styles.fab, styles.iconRow]} activeOpacity={0.85} onPress={findNearest}>
+          <TouchableOpacity style={[styles.fab, styles.iconRow, { bottom: base + 84 }]} activeOpacity={0.85} onPress={findNearest}>
             <MaterialCommunityIcons name="compass-outline" size={20} color={theme.onPrimary} />
             <Text style={styles.fabTxt}>Buscar cupo</Text>
           </TouchableOpacity>
         )}
 
         {target && (
-          <View style={[styles.banner, hasRoute ? styles.bannerOk : styles.bannerWarn]}>
+          <View style={[styles.banner, hasRoute ? styles.bannerOk : styles.bannerWarn, { bottom: base + 148 }]}>
             <Text style={styles.bannerTxt}>{target.text}</Text>
             <TouchableOpacity onPress={() => setTarget(null)}>
               <MaterialCommunityIcons name="close" size={18} color={theme.textSecondary} style={styles.bannerX} />
@@ -357,7 +367,7 @@ function AppContent() {
         )}
 
         {active && (
-          <View style={styles.sheet}>
+          <View style={[styles.sheet, { bottom: base }]}>
             <View style={styles.stat}>
               <Text style={[styles.statN, { color: theme.free }]}>{counts.free}</Text>
               <Text style={styles.statL}>Libres</Text>
@@ -380,6 +390,7 @@ function AppContent() {
           </View>
         )}
 
+        <LotPicker visible={pickerOpen} lots={lots} activeId={activeId} favorites={favorites} onSelect={setActiveId} onClose={() => setPickerOpen(false)} />
         <PrivacyScreen visible={privacyOpen} onClose={() => setPrivacyOpen(false)} lotName={active?.name ?? null} />
         <AuthScreen visible={authOpen && !session} onClose={() => setAuthOpen(false)} />
         {session && (
@@ -418,14 +429,16 @@ function AppContent() {
           </View>
         </Modal>
       </View>
-    </SafeAreaProvider>
+    </>
   )
 }
 
 export default function App() {
   return (
     <ErrorBoundary>
-      <AppContent />
+      <SafeAreaProvider>
+        <AppContent />
+      </SafeAreaProvider>
     </ErrorBoundary>
   )
 }
@@ -446,6 +459,10 @@ const styles = StyleSheet.create({
   topText: { flex: 1 },
   modeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 14, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border },
   iconRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  titleFlex: { flexShrink: 1 },
+  menu: { alignSelf: 'flex-end', marginTop: 6, backgroundColor: theme.surface, borderRadius: 14, borderWidth: 1, borderColor: theme.border, paddingVertical: 4, ...shadow },
+  menuItem: { paddingVertical: 12, paddingHorizontal: 16 },
+  menuTxt: { fontSize: 14, fontWeight: '800', color: theme.text },
   title: { fontSize: 15, fontWeight: '800', color: theme.text },
   sub: { fontSize: 12, fontWeight: '600', color: theme.textSecondary, marginTop: 2 },
 
@@ -464,17 +481,15 @@ const styles = StyleSheet.create({
   mr8: { marginRight: 8 },
   mt8: { marginTop: 8 },
 
-  sheet: { position: 'absolute', left: 14, right: 14, bottom: 24, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(250,245,236,0.96)', borderRadius: 20, paddingVertical: 14, ...shadow },
+  sheet: { position: 'absolute', left: 14, right: 14, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(250,245,236,0.96)', borderRadius: 20, paddingVertical: 14, ...shadow },
   stat: { flex: 1, alignItems: 'center' },
   statN: { fontSize: 22, fontWeight: '800', color: theme.text },
   statL: { fontSize: 12, fontWeight: '600', color: theme.textSecondary, marginTop: 2 },
   sep: { width: 1, height: 32, backgroundColor: theme.border },
 
-  fab: { position: 'absolute', right: 14, bottom: 108, backgroundColor: theme.primary, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18, ...shadow },
+  fab: { position: 'absolute', right: 14, backgroundColor: theme.primary, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18, ...shadow },
   fabTxt: { color: theme.onPrimary, fontSize: 15, fontWeight: '800' },
-  banner: { position: 'absolute', left: 14, right: 14, bottom: 172, flexDirection: 'row', alignItems: 'center', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16, ...shadow },
-  camBanner: { bottom: 230 },
-  alertBanner: { bottom: 288 },
+  banner: { position: 'absolute', left: 14, right: 14, flexDirection: 'row', alignItems: 'center', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16, ...shadow },
   bannerBody: { flex: 1 },
   bannerOk: { backgroundColor: theme.primaryTint },
   bannerWarn: { backgroundColor: theme.occupiedTint },
