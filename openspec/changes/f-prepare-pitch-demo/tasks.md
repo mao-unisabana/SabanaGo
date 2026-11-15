@@ -5,7 +5,7 @@ Hito de Obsidian: 18 (entorno de demo) y demo interna. Fechas: sáb 14 nov 2026 
 ## 1. Herramientas
 
 - [ ] 1.1 Crear `feature/f-prepare-pitch-demo` e implementar `tools/calibrate.py` (cuadro congelado, 4 clics por puesto, deshacer, guardar en `space.image_polygon` y en `data/calibration/<camera_id>.json`); verificación: tras calibrar 6 puestos, `select code, image_polygon from space` los muestra y la detección los usa sin reiniciar
-- [ ] 1.2 Implementar `tools/capture_reference.py` (promedio de 10 cuadros y chequeo de brillo 40–220); prueba pytest del chequeo con una imagen negra y una normal; verificación: la prueba pasa
+- [x] 1.2 Implementar `tools/capture_reference.py` (promedio de 10 cuadros y chequeo de brillo 40–220); prueba pytest del chequeo con una imagen negra y una normal; verificación: la prueba pasa
 - [ ] 1.3 Implementar `tools/demo_reset.py` y el botón oculto de desarrollo que limpia la espera de avisos en el celular; verificación: tras el reinicio, la app muestra los 6 puestos libres en menos de 10 s y Alejandría no cambia
 
 ## 2. Maqueta y ensayo técnico

@@ -17,7 +17,7 @@ Hitos de Obsidian: 13 (RF-05, RF-06) y 14 (correo y avisos). Fecha objetivo: sá
 
 ## 4. Aviso
 
-- [ ] 4.1 Implementar `useFreeSpotAlerts` con la regla de transición a libre, ventana de días y hora y espera de 5 min; pruebas unitarias de la función de decisión (ocupado→libre avisa, libre→ocupado no, fuera de la ventana no, segundo aviso antes de 5 min no); verificación: las pruebas pasan
+- [x] 4.1 Implementar `useFreeSpotAlerts` con la regla de transición a libre, ventana de días y hora y espera de 5 min; pruebas unitarias de la función de decisión (ocupado→libre avisa, libre→ocupado no, fuera de la ventana no, segundo aviso antes de 5 min no); verificación: las pruebas pasan
 - [ ] 4.2 Notificación local con `expo-notifications`, banner C06 si no hay permiso y apertura de la zona al tocar; verificación: en Expo Go, al liberar un puesto con `curl` a la ingesta, el aviso llega en menos de 10 s y abre la zona
 
 ## 5. Entrega

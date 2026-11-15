@@ -95,3 +95,68 @@ export async function adminDeleteSpace(spaceId: number) {
   const { error } = await supabase.rpc('admin_delete_space', { space_id: spaceId })
   throwIf(error)
 }
+
+// --- Cuenta y favoritos (cambio E) ---
+
+export interface Favorite {
+  id: number
+  parking_lot_id: number
+  zone_id: number | null
+  notify: boolean
+  notify_days: number[] | null
+  notify_time: string | null
+}
+
+const FAVORITE_COLS = 'id,parking_lot_id,zone_id,notify,notify_days,notify_time'
+
+export async function signUp(email: string, password: string) {
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || undefined,
+      data: { privacy_accepted_at: new Date().toISOString() },
+    },
+  })
+  throwIf(error)
+}
+
+export async function signIn(email: string, password: string) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  throwIf(error)
+}
+
+export async function signOut() {
+  const { error } = await supabase.auth.signOut()
+  throwIf(error)
+}
+
+/** Borra la cuenta vía RPC y cierra la sesión local. */
+export async function deleteMyAccount() {
+  const { error } = await supabase.rpc('delete_my_account')
+  throwIf(error)
+  await supabase.auth.signOut({ scope: 'local' })
+}
+
+export async function fetchFavorites(): Promise<Favorite[]> {
+  const { data, error } = await supabase.from('favorite').select(FAVORITE_COLS).order('created_at')
+  throwIf(error)
+  return (data as Favorite[]) ?? []
+}
+
+export async function addFavorite(userId: string, lotId: string, zoneId: string | null) {
+  const { error } = await supabase
+    .from('favorite')
+    .insert({ user_id: userId, parking_lot_id: Number(lotId), zone_id: zoneId ? Number(zoneId) : null })
+  throwIf(error)
+}
+
+export async function updateFavorite(id: number, patch: Partial<Pick<Favorite, 'notify' | 'notify_days' | 'notify_time'>>) {
+  const { error } = await supabase.from('favorite').update(patch).eq('id', id)
+  throwIf(error)
+}
+
+export async function removeFavorite(id: number) {
+  const { error } = await supabase.from('favorite').delete().eq('id', id)
+  throwIf(error)
+}
