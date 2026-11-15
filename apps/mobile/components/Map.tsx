@@ -286,7 +286,8 @@ function applyActive(arr){
   spots=arr||[];
   nextId=spots.length?Math.max.apply(null,spots.map(function(f){return f.properties.id;}))+1:1;
   batch=spots.length?Math.max.apply(null,spots.map(function(f){return f.properties.batch||0;}))+1:0;
-  if(map.getSource('spots')) refresh();
+  // Carga programática (Realtime, cambio de zona): no se notifica a la app como edición.
+  if(map.getSource('spots')) map.getSource('spots').setData(fc());
 }
 function zonesFc(arr){
   return {type:'FeatureCollection',features:(arr||[]).filter(function(z){return z.ring&&z.ring.length>=3;}).map(function(z){

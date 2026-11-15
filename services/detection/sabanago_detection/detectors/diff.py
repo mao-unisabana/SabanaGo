@@ -48,8 +48,8 @@ class DiffDetector:
         self.ref_gray = _gray(frame)
 
     def detect(self, frame, spaces):
-        if self.ref_gray is None:  # sin referencia: capturar este cuadro vacio
-            self.capture_reference(frame)
+        if self.ref_gray is None:  # sin referencia de lote vacio: no_data, no adivinar
+            return {}
         cur = _gray(frame)
         out = {}
         for sp in spaces:
